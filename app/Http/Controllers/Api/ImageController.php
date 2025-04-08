@@ -64,20 +64,6 @@ class ImageController extends Controller
 
 
 
-    public function edit($id)
-    {
-        // Aquí puedes obtener la imagen con el ID proporcionado y pasarla a la vista del formulario de actualización
-        $image = Image::find($id)->with('user')->find($id);
-
-
-
-        // return view('avatar.edit', compact('image'));
-
-        return $image;
-    }
-
-
-
 
 
     public function updateImage(Request $request, $id)
@@ -156,65 +142,4 @@ class ImageController extends Controller
         //     return "El archivo $avatar no existe.";
         // }
     }
-
-
-
-    // public function store(Request $request)
-    // {
-
-    //     $request->validate([
-    //         'image_url' => 'required|image|max:2048',
-    //         'user_id' => 'required|max:255',
-
-
-    //     ]);
-
-    //     $images = Image::create($request->all());
-
-    //     return $images;
-    // }
-
-
-
-    public function show($id)
-    {
-        $image = Image::included()->findOrFail($id);
-        return $image;
-    }
-
-
-    public function update()
-    {
-        return view('avatar.edit');
-    }
-
-
-    // public function destroy(Image $image)
-    // {
-    //     $image->delete();
-    //     return $image;
-    // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
