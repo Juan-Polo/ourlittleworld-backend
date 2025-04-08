@@ -38,7 +38,7 @@ class ImageController extends Controller
             $imageName = pathinfo($imageName, PATHINFO_FILENAME);
             $nameImage = str_replace(" ", "_", $imageName);
             $extension = $image->getClientOriginalExtension();
-            $picture = date('His') . '-' . $nameImage . '-' . $extension;
+            $picture = date('His') . '-' . $nameImage . '.' . $extension;
 
             // Guardar la imagen en el disco 'storage'
             $imagePath = $image->storeAs('public/avatar', $picture);
@@ -100,7 +100,7 @@ class ImageController extends Controller
                 $imageName = pathinfo($imageName, PATHINFO_FILENAME);
                 $nameImage = str_replace(" ", "_", $imageName);
                 $extension = $image->getClientOriginalExtension();
-                $picture = date('His') . '-' . $nameImage . '-' . $extension;
+                $picture = date('His') . '-' . $nameImage . '.' . $extension;
 
                 // Guardar la nueva imagen en el almacenamiento
                 $imagePath = $image->storeAs('public/avatar', $picture);
