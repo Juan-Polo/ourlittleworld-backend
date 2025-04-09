@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 use App\Http\Controllers\Controller;
 use App\Models\Image;
 use App\Models\Notification;
@@ -9,6 +11,7 @@ use App\Models\Mensaje;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 
 
@@ -34,19 +37,15 @@ class ImageController extends Controller
     {
         if ($request->hasFile('image_url')) {
             $image = $request->file('image_url');
-            $imageName = $image->getClientOriginalName();
-            $imageName = pathinfo($imageName, PATHINFO_FILENAME);
-            $nameImage = str_replace(" ", "_", $imageName);
-            $extension = $image->getClientOriginalExtension();
-            $picture = date('His') . '-' . $nameImage . '.' . $extension;
 
-            // Guardar la imagen en el disco 'storage'
-            $imagePath = $image->storeAs('public/avatar', $picture);
+            // Subir a Cloudinary
+            $uploadedFileUrl = Cloudinary::upload($image->getRealPath(), [
+                'folder' => 'avatar'
+            ])->getSecurePath();
 
-            // Crear el modelo de imagen y guardar la ruta en la base de datos
+            // Crear el modelo de imagen y guardar la URL segura
             $imageModel = new Image();
-            // Asignar la ruta relativa de la imagen al atributo 'image_url'
-            $imageModel->image_url = 'storage/avatar/' . $picture;
+            $imageModel->image_url = $uploadedFileUrl;
             $imageModel->user_id = $request->user_id;
             $imageModel->save();
 
@@ -64,82 +63,39 @@ class ImageController extends Controller
 
 
 
-
-
     public function updateImage(Request $request, $id)
     {
-        // Obtener el modelo de imagen existente
-
-
         $imageModel = Image::find($id);
 
-
-        // $url = $imageModel->image_url;
-
-        // dd($url);
-
-        $url = str_replace('storage', 'public', $imageModel->image_url);
-
-        // return $url;
-
-
         if ($imageModel) {
-            // Verificar si se proporciona una nueva imagen
-
-
             if ($request->hasFile('image_url')) {
 
+                // 🔥 Eliminar imagen anterior de Cloudinary
+                if ($imageModel->image_url) {
+                    // Extraer el public_id desde la URL
+                    $urlPath = parse_url($imageModel->image_url, PHP_URL_PATH);
+                    $pathParts = explode('/', $urlPath);
+                    $filename = end($pathParts); // nombre.ext
+                    $publicId = 'avatar/' . pathinfo($filename, PATHINFO_FILENAME); // sin extensión
 
-                // Eliminar la imagen existente del almacenamiento
-                if (Storage::exists($url)) {
-                    Storage::delete($url);
+                    Cloudinary::destroy($publicId);
                 }
-                // Procesar la nueva imagen
+
+                // 🚀 Subir nueva imagen
                 $image = $request->file('image_url');
-                $imageName = $image->getClientOriginalName();
-                $imageName = pathinfo($imageName, PATHINFO_FILENAME);
-                $nameImage = str_replace(" ", "_", $imageName);
-                $extension = $image->getClientOriginalExtension();
-                $picture = date('His') . '-' . $nameImage . '.' . $extension;
+                $uploadedFileUrl = Cloudinary::upload($image->getRealPath(), [
+                    'folder' => 'avatar'
+                ])->getSecurePath();
 
-                // Guardar la nueva imagen en el almacenamiento
-                $imagePath = $image->storeAs('public/avatar', $picture);
-
-                // Actualizar la ruta de la imagen en el modelo de imagen existente
-                $imageModel->image_url = 'storage/avatar/' . $picture;
+                // 💾 Actualizar modelo
+                $imageModel->image_url = $uploadedFileUrl;
             }
 
-            // Guardar los cambios en el modelo de imagen existente
             $imageModel->save();
 
-            // Retornar la respuesta de éxito
             return $imageModel;
         } else {
-            // Retornar un mensaje de error si la imagen no se encuentra en la base de datos
             return response()->json(["mensaje" => "La imagen no se encontró en la base de datos"], 404);
         }
-    }
-
-
-
-
-
-
-
-    public function deleteFile(Image $image)
-    {
-
-        $url = str_replace('storage', 'public', $image->image_url);
-
-        Storage::delete($url);
-
-        $image->delete();
-
-        // if (Storage::exists($avatar)) {
-        //     Storage::delete($avatar);
-        //     return "El archivo $avatar ha sido eliminado exitosamente.";
-        // } else {
-        //     return "El archivo $avatar no existe.";
-        // }
     }
 }
