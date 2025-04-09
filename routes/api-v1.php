@@ -54,3 +54,14 @@ Route::get('/edit-image/{id}', [ImageController::class, 'edit'])->name('edit-ima
 
 Route::delete('/delete-file/{image}', [ImageController::class, 'deleteFile'])->name('delete-file');
 Route::put('/update-image/{id}', [ImageController::class, 'updateImage'])->name('update-image');
+
+
+
+
+Route::get('/test-cloudinary', function () {
+    return [
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key' => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+    ];
+});
