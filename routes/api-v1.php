@@ -53,4 +53,4 @@ Route::post('upload', [ImageController::class, 'uploadImage'])->name('images.upl
 Route::get('/edit-image/{id}', [ImageController::class, 'edit'])->name('edit-image');
 
 Route::delete('/delete-file/{image}', [ImageController::class, 'deleteFile'])->name('delete-file');
-Route::post('/update-image/{id}', [ImageController::class, 'updateImage'])->name('update-image');
+Route::put('/update-image/{id}', [ImageController::class, 'updateImage'])->name('update-image');
