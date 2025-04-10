@@ -8,6 +8,7 @@ use App\Models\Maestro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class DegreeController extends Controller
 {
@@ -23,26 +24,22 @@ class DegreeController extends Controller
         return $degrees;
     }
 
+
+
     public function getImages()
     {
-        $imageDirectory = storage_path('app/public/imgDegrees');
-        $imageFiles = [];
+        $images = Cloudinary::getResources([
+            'type' => 'upload',
+            'prefix' => 'degrees/',  // La carpeta 'degrees' en Cloudinary
+            'resource_type' => 'image',
+        ]);
 
-        if (is_dir($imageDirectory)) {
-            $imageFiles = File::files($imageDirectory);
-        }
+        // Extrae las URLs de las imágenes
+        $imageUrls = array_map(function ($image) {
+            return $image['secure_url'];
+        }, $images['resources']);
 
-        // Transformar los nombres de los archivos en rutas completas de imágenes
-        $images = [];
-        foreach ($imageFiles as $imageFile) {
-            // Obtener la ruta relativa de la imagen dentro de la carpeta "storage/public/img"
-            $relativeImagePath = 'storage/imgDegrees/' . $imageFile->getFilename();
-            // Obtener la URL completa de la imagen
-            $images[] = asset($relativeImagePath);
-        }
-
-        // Devolver las rutas de las imágenes como JSON
-        return response()->json(['images' => $images]);
+        return response()->json($imageUrls);
     }
 
 
