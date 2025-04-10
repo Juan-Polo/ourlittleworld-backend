@@ -65,37 +65,44 @@ class ImageController extends Controller
 
     public function updateImage(Request $request, $id)
     {
-        $imageModel = Image::find($id);
+        try {
+            $imageModel = Image::find($id);
 
-        if ($imageModel) {
+            if (!$imageModel) {
+                return response()->json(["mensaje" => "La imagen no se encontró en la base de datos"], 404);
+            }
+
             if ($request->hasFile('image_url')) {
 
-                // 🔥 Eliminar imagen anterior de Cloudinary
+                // Eliminar imagen anterior
                 if ($imageModel->image_url) {
-                    // Extraer el public_id desde la URL
                     $urlPath = parse_url($imageModel->image_url, PHP_URL_PATH);
                     $pathParts = explode('/', $urlPath);
-                    $filename = end($pathParts); // nombre.ext
-                    $publicId = 'avatar/' . pathinfo($filename, PATHINFO_FILENAME); // sin extensión
-
+                    $filename = end($pathParts);
+                    $publicId = 'avatar/' . pathinfo($filename, PATHINFO_FILENAME);
                     Cloudinary::destroy($publicId);
                 }
 
-                // 🚀 Subir nueva imagen
+                // Subir nueva imagen
                 $image = $request->file('image_url');
                 $uploadedFileUrl = Cloudinary::upload($image->getRealPath(), [
                     'folder' => 'avatar'
                 ])->getSecurePath();
 
-                // 💾 Actualizar modelo
+                // Guardar
                 $imageModel->image_url = $uploadedFileUrl;
+                $imageModel->save();
             }
 
-            $imageModel->save();
-
-            return $imageModel;
-        } else {
-            return response()->json(["mensaje" => "La imagen no se encontró en la base de datos"], 404);
+            return response()->json([
+                'mensaje' => 'Imagen actualizada correctamente',
+                'data' => $imageModel
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'mensaje' => $e->getMessage()
+            ], 500);
         }
     }
 }
