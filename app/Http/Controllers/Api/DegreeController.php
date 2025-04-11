@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use Cloudinary\Api\Resources;
+use Cloudinary\Api\Admin\AdminApi;
+
 use App\Http\Controllers\Controller;
 use App\Models\Degree;
 use App\Models\Maestro;
@@ -28,21 +31,26 @@ class DegreeController extends Controller
 
     public function getImages()
     {
-        $images = Cloudinary::getResources([
-            'type' => 'upload',
-            'prefix' => 'degrees/',  // La carpeta 'degrees' en Cloudinary
-            'resource_type' => 'image',
-        ]);
+        try {
+            $adminApi = new AdminApi();
 
-        // Extrae las URLs de las imágenes
-        $imageUrls = array_map(function ($image) {
-            return $image['secure_url'];
-        }, $images['resources']);
+            $response = $adminApi->assets([
+                'type' => 'upload',
+                'prefix' => 'degrees/',
+                'resource_type' => 'image',
+            ]);
 
-        return response()->json($imageUrls);
+            $imageUrls = array_map(function ($image) {
+                return $image['secure_url'];
+            }, $response['resources']);
+
+            return response()->json($imageUrls);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-
-
 
 
     public function store(Request $request)
