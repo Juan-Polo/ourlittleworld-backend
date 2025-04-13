@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 use App\Http\Controllers\Controller;
 use App\Models\Degree;
 use App\Models\Evidencia;
@@ -25,21 +27,19 @@ class EvidenciaController extends Controller
     {
         if ($request->hasFile('evidencia_url')) {
             $archivo = $request->file('evidencia_url');
-            $archivoName = $archivo->getClientOriginalName();
-            $archivoName = pathinfo($archivoName, PATHINFO_FILENAME);
-            $nameArchivo = str_replace(" ", "_", $archivoName);
-            $extension = $archivo->getClientOriginalExtension();
-            $picture = date('His') . '-' . $nameArchivo . '-' . $extension;
 
-            // Guardar la imagen en el disco 'storage'
-            $ArchivoPath = $archivo->storeAs('public/archivos/evidencias', $picture);
+            // Subir archivo a Cloudinary
+            $uploadedFileUrl = Cloudinary::upload($archivo->getRealPath(), [
+                'folder' => 'evidencias',
+                'public_id' => pathinfo($archivo->getClientOriginalName(), PATHINFO_FILENAME),
+                'overwrite' => true
+            ])->getSecurePath();
 
-            // Crear el modelo de imagen y guardar la ruta en la base de datos
+            // Crear el modelo y guardar la URL pública
             $EvidenciaModel = new Evidencia();
-            // Asignar la ruta relativa de la imagen al atributo 'image_url'
-            $EvidenciaModel->evidencia_url = 'storage/archivos/evidencias/' . $picture;
+            $EvidenciaModel->evidencia_url = $uploadedFileUrl;
             $EvidenciaModel->fechaSubida = $request->fechaSubida;
-            $EvidenciaModel->activity_id  = $request->activity_id;
+            $EvidenciaModel->activity_id = $request->activity_id;
 
             $EvidenciaModel->save();
 

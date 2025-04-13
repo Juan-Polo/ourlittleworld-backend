@@ -4,6 +4,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 use App\Http\Controllers\Controller;
 use App\Models\Degree;
 use App\Models\Evidencia;
@@ -20,30 +22,24 @@ class HorarioController extends Controller
 
     public function store(Request $request)
     {
-
-
         if ($request->hasFile('horario_url')) {
             $archivo = $request->file('horario_url');
-            $archivoName = $archivo->getClientOriginalName();
-            $archivoName = pathinfo($archivoName, PATHINFO_FILENAME);
-            $nameArchivo = str_replace(" ", "_", $archivoName);
-            $extension = $archivo->getClientOriginalExtension();
-            $picture = date('His') . '-' . $nameArchivo . '-.' . $extension;
 
-            // Guardar la imagen en el disco 'storage'
-            $imagePath = $archivo->storeAs('public/horarios', $picture);
+            // Subir archivo a Cloudinary
+            $uploadedFileUrl = Cloudinary::upload($archivo->getRealPath(), [
+                'folder' => 'horarios',
+                'public_id' => pathinfo($archivo->getClientOriginalName(), PATHINFO_FILENAME),
+                'overwrite' => true
+            ])->getSecurePath();
 
-            // Crear el modelo de imagen y guardar la ruta en la base de datos
-            $activityModel = new Horario();
-            // Asignar la ruta relativa de la imagen al atributo 'image_url'
-            $activityModel->horario_url = 'storage/horarios/' . $picture;
+            // Crear el modelo Horario y guardar la URL pública
+            $horarioModel = new Horario();
+            $horarioModel->horario_url = $uploadedFileUrl;
+            $horarioModel->degree_id = $request->degree_id;
 
+            $horarioModel->save();
 
-            $activityModel->degree_id  = $request->degree_id;
-
-            $activityModel->save();
-
-            return $activityModel;
+            return $horarioModel;
         } else {
             return response()->json(["mensaje" => "error"]);
         }
