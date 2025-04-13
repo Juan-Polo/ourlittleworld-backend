@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
@@ -15,18 +14,8 @@ class RoleSeeder extends Seeder
      */
     public function run()
     {
-        
-        $role =new Role();
-        $role->name ="Maestro";
-        $role->save();
-
-        $role2 =new Role();
-        $role2->name ="Padre";
-        $role2->save();
-
-        $role3 =new Role();
-        $role3->name ="Alumno";
-        $role3->save();
-
+        Role::firstOrCreate(['name' => 'Maestro']);
+        Role::firstOrCreate(['name' => 'Padre']);
+        Role::firstOrCreate(['name' => 'Alumno']);
     }
 }
